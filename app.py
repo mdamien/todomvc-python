@@ -1,7 +1,5 @@
-from js import document
-
 ### lys (templating engine) ###
-
+from js import document
 import html, types, keyword, sys, re
 
 
@@ -37,7 +35,10 @@ def lys_render(node):
         node_rendered = document.createElement(node.tag)
         if node.attrs:
             for k, v in node.attrs.items():
-                node_rendered.setAttribute(k, v)
+                if k.startswith('on') and callable(v):
+                    node_rendered.addEventListener(k[2:].lower(), v)
+                else:
+                    node_rendered.setAttribute(k, v)
         if node.children:
             node_rendered.appendChild(lys_render(node.children))
         return node_rendered
@@ -53,7 +54,7 @@ class LysNode:
     def __call__(self, _shortcut=None, **attrs):
         """Return a new node with the same tag but new attributes"""
         def clean(k, v):
-            if v and type(v) not in (str, LysRawNode):
+            if v and type(v) not in (str, LysRawNode) and not callable(v):
                 raise LysException('Invalid attribute value "{}"'
                     ' for key "{}"'.format(v, k))
             # allow to use reserved keywords as: class_, for_,..
@@ -156,7 +157,7 @@ def render():
                 f"{'item' if remaining == 1 else 'items'} left",
             ),
             L.ul('.filters') / (
-                L.li / L.a('.selected', href="#/") / 'All',
+                L.li / L.a('.selected', href="#/", onclick=lambda x:print('hello joroold')) / 'All',
                 L.li / L.a(href="#/active") / 'Active',
                 L.li / L.a(href="#/completed") / 'Completed',
             ),
