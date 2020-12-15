@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en" data-framework="backbonejs">
+  <head>
+    <meta charset="utf-8">
+    <title>Python • TodoMVC</title>
+    <link rel="stylesheet" href="node_modules/todomvc-common/base.css">
+    <link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
+  </head>
+  <body>
+    <script type="text/template" id="item-template">
+      <div class="view">
+        <input class="toggle" type="checkbox" <%= completed ? 'checked' : '' %>>
+        <label><%- title %></label>
+        <button class="destroy"></button>
+      </div>
+      <input class="edit" value="<%- title %>">
+    </script>
+    <section id="app" class="todoapp"></section>
+    <footer class="info">
+      <p>Double-click to edit a todo</p>
+      <p>Written by <a href="https://github.com/mdamien">Damien Marié</a></p>
+      <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+    </footer>
+
+    <script type="text/javascript">
+        // set the pyodide files URL (packages.json, pyodide.asm.data etc)
+        window.languagePluginUrl = 'https://cdn.jsdelivr.net/pyodide/v0.15.0/full/';
+    </script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.15.0/full/pyodide.js"></script>
+    
+    <script type="text/python" src="app.py"></script>
+
+    <script type="text/javascript">
+    async function run_script(el) {
+      console.log("executing " + el.src)
+      const response = await fetch(el.src);
+      text = await response.text()
+      pyodide.runPython(text)
+    }
+    function run_all() {
+      document.querySelectorAll('script[type="text/python"]').forEach(run_script)
+    }
+    function init() {
+      languagePluginLoader.then(() => {
+        pyodide.loadPackage('micropip').then(run_all);
+      });
+    }
+    init()
+    </script>
+  </body>
+</html>
