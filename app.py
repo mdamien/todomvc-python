@@ -42,9 +42,6 @@ class LysNode:
     def __call__(self, _shortcut=None, **attrs):
         """Return a new node with the same tag but new attributes"""
         def clean(k, v):
-            if v and type(v) not in (str, LysRawNode) and not callable(v):
-                raise LysException('Invalid attribute value "{}"'
-                    ' for key "{}"'.format(v, k))
             # allow to use reserved keywords as: class_, for_,..
             if k[-1] == '_' and k[:-1] in keyword.kwlist:
                 k = k[:-1]
@@ -123,10 +120,14 @@ STATE = {
 
 
 ID_COUNTER = 0
-def generate_id():
+def _generate_id():
     global ID_COUNTER
     ID_COUNTER += 1
     return ID_COUNTER
+
+
+def _remaining():
+    return len([todo for todo in STATE['todos'] if not todo['completed']])
 
 
 def new_todo(evt):
@@ -135,7 +136,7 @@ def new_todo(evt):
     if not evt.target.value:
         return
     STATE['todos'] = [{
-        'id': generate_id(),
+        'id': _generate_id(),
         'title': evt.target.value,
         'completed': False,
     }] + STATE['todos']
@@ -143,9 +144,16 @@ def new_todo(evt):
     render()
 
 
+def toggle_all(evt):
+    for todo in STATE['todos']:
+        todo['completed'] = evt.target.checked
+    render()
+
+
 def render():
-    remaining = len([todo for todo in STATE['todos'] if not todo['completed']])
-    completed = len([todo for todo in STATE['todos'] if todo['completed']])
+    total = len(STATE['todos'])
+    remaining = _remaining()
+    completed = total - remaining
 
     rendered = lys_render((
         L.header('.header') / (
@@ -153,13 +161,14 @@ def render():
             L.input('.new-todo', placeholder="What needs to be done?", autoFocus='', onKeyUp=new_todo),
         ),
         L.section('.main') / (
-            L.input('.toggle-all', type="checkbox"),
+            L.input('#toggle-all.toggle-all', type="checkbox", onChange=toggle_all,
+                checked=remaining == 0 and total > 0),
             L.label(htmlFor="toggle-all") / 'Mark all as complete',
         ),
         L.ul('.todo-list') / (
             (
                 L.li / (
-                    L.input('.toggle', type="checkbox"),
+                    L.input('.toggle', type="checkbox", checked=todo['completed']),
                     L.label / todo['title'],
                     L.button('.destroy'),
                 )
