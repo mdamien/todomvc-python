@@ -111,7 +111,8 @@ L = _L()
 
 ### app ###
 import js
-from js import document
+from js import document, localStorage
+import json
 
 
 STATE = {
@@ -139,28 +140,28 @@ def new_todo(evt):
         'editing': False,
     }] + STATE['todos']
     evt.target.value = ''
-    render()
+    save_and_render()
 
 
 def toggle_all(evt):
     for todo in STATE['todos']:
         todo['completed'] = evt.target.checked
-    render()
+    save_and_render()
 
 
 def toggle(todo):
     todo['completed'] = not todo['completed']
-    render()
+    save_and_render()
 
 
 def destroy(removed_todo):
     STATE['todos'] = [todo for todo in STATE['todos'] if todo is not removed_todo]
-    render()
+    save_and_render()
 
 
 def enter_editing_mode(todo):
     todo['editing'] = True
-    render()
+    save_and_render()
 
 
 def exit_editing_mode(evt, todo):
@@ -170,17 +171,17 @@ def exit_editing_mode(evt, todo):
         destroy(todo)
         return
     todo['editing'] = False
-    render()
+    save_and_render()
 
 
 def update_title(evt, todo):
     todo['title'] = evt.target.value
-    render()
+    save_and_render()
 
 
 def clear_completed(evt):
     STATE['todos'] = [todo for todo in STATE['todos'] if not todo['completed']]
-    render()
+    save_and_render()
 
 
 def render_todo(todo):
@@ -199,6 +200,10 @@ def render_todo(todo):
 
 def set_filter(filter):
     STATE['filter'] = filter
+    save_and_render()
+
+def save_and_render():
+    localStorage.setItem('app', json.dumps(STATE))
     render()
 
 
@@ -250,5 +255,8 @@ def render():
       rendered,
       document.getElementById('app')
     );
+
+if localStorage.getItem('app'):
+    STATE = json.loads(localStorage.getItem('app'))
 
 render()
