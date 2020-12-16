@@ -110,6 +110,7 @@ L = _L()
 
 
 ### app ###
+import js
 from js import document
 
 
@@ -181,6 +182,7 @@ def clear_completed(evt):
     STATE['todos'] = [todo for todo in STATE['todos'] if not todo['completed']]
     render()
 
+
 def render_todo(todo):
     return L.li('.editing' if todo['editing'] else '' + '.completed' if todo['completed'] else '') / (
         L.div('.view') / (
@@ -195,13 +197,25 @@ def render_todo(todo):
     )
 
 
+def set_filter(filter):
+    STATE['filter'] = filter
+    render()
+
+
 def render():
     total = len(STATE['todos'])
     remaining = _remaining()
     completed = total - remaining
 
+    if STATE['filter'] == 'active':
+        todos_to_render = [todo for todo in STATE['todos'] if not todo['completed']]
+    elif STATE['filter'] == 'completed':
+        todos_to_render = [todo for todo in STATE['todos'] if todo['completed']]
+    else:
+        todos_to_render = STATE['todos']
+
     todos = []
-    for todo in STATE['todos']:
+    for todo in todos_to_render:
         todos.append(render_todo(todo))
 
     rendered = lys_render((
@@ -221,9 +235,12 @@ def render():
                 f"{'item' if remaining == 1 else 'items'} left",
             ),
             L.ul('.filters') / (
-                L.li / L.a('.selected', href="#/") / 'All',
-                L.li / L.a(href="#/active") / 'Active',
-                L.li / L.a(href="#/completed") / 'Completed',
+                L.li / L.a('.selected' if STATE['filter'] == 'all' else '',
+                    onClick=lambda evt: set_filter('all'), href="#") / 'All',
+                L.li / L.a('.selected' if STATE['filter'] == 'active' else '',
+                    onClick=lambda evt: set_filter('active'), href="#") / 'Active',
+                L.li / L.a('.selected' if STATE['filter'] == 'completed' else '',
+                    onClick=lambda evt: set_filter('completed'), href="#") / 'Completed',
             ),
             (L.button('.clear-completed', onClick=clear_completed) / 'Clear completed') if completed else None,
         ),
