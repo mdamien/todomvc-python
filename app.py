@@ -131,25 +131,47 @@ STATE = {
     'filter': 'all',
 }
 
-def render():
-    remaining = 4
-    completed = 2
 
+ID_COUNTER = 0
+def generate_id():
+    global ID_COUNTER
+    ID_COUNTER += 1
+    return ID_COUNTER
+
+
+def new_todo(evt):
+    if evt.key != "Enter":
+        return
+    STATE['todos'] = [{
+        'id': generate_id(),
+        'title': evt.target.value,
+        'completed': False,
+    }] + STATE['todos']
+    render()
+
+
+def render():
+    remaining = len([todo for todo in STATE['todos'] if not todo['completed']])
+    completed = len([todo for todo in STATE['todos'] ifss todo['completed']])
+
+    document.getElementById('app').innerHTML = ''
     document.getElementById('app').appendChild(lys_render((
         L.header('.header') / (
             L.h1 / 'todos',
-            L.input('.new-todo', placeholder="What needs to be done?", autofocus=''),
+            L.input('.new-todo', placeholder="What needs to be done?", autofocus='', onkeyup=new_todo),
         ),
         L.section('.main') / (
             L.input('.toggle-all', type="checkbox"),
             L.label(**{'for':"toggle-all"}) / 'Mark all as complete',
         ),
         L.ul('.todo-list') / (
-            L.li / (
-                L.input('.toggle', type="checkbox"),
-                L.label / "<title>",
-                L.button('.destroy'),
-            ),
+            (
+                L.li / (
+                    L.input('.toggle', type="checkbox"),
+                    L.label / todo['title'],
+                    L.button('.destroy'),
+                )
+            ) for todo in STATE['todos']
         ),
         L.footer('.footer') / (
             L.span('.todo-count') / (
@@ -157,7 +179,7 @@ def render():
                 f"{'item' if remaining == 1 else 'items'} left",
             ),
             L.ul('.filters') / (
-                L.li / L.a('.selected', href="#/", onclick=lambda x:print('hello joroold')) / 'All',
+                L.li / L.a('.selected', href="#/") / 'All',
                 L.li / L.a(href="#/active") / 'Active',
                 L.li / L.a(href="#/completed") / 'Completed',
             ),

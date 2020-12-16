@@ -41,9 +41,7 @@
       document.querySelectorAll('script[type="text/python"]').forEach(run_script)
     }
     function init() {
-      languagePluginLoader.then(() => {
-        pyodide.loadPackage('micropip').then(run_all);
-      });
+      languagePluginLoader.then(run_all);
     }
     init()
     </script>
