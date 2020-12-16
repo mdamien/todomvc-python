@@ -177,8 +177,12 @@ def update_title(evt, todo):
     render()
 
 
+def clear_completed(evt):
+    STATE['todos'] = [todo for todo in STATE['todos'] if not todo['completed']]
+    render()
+
 def render_todo(todo):
-    return L.li('.editing' if todo['editing'] else '') / (
+    return L.li('.editing' if todo['editing'] else '' + '.completed' if todo['completed'] else '') / (
         L.div('.view') / (
             L.input('.toggle', type="checkbox", checked=todo['completed'],
                 onChange=lambda evt: toggle(todo)),
@@ -221,7 +225,7 @@ def render():
                 L.li / L.a(href="#/active") / 'Active',
                 L.li / L.a(href="#/completed") / 'Completed',
             ),
-            (L.button('.clear-completed') / 'Clear completed') if completed else None,
+            (L.button('.clear-completed', onClick=clear_completed) / 'Clear completed') if completed else None,
         ),
     ))
 
