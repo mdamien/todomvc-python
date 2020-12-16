@@ -23,11 +23,12 @@
     </footer>
 
     <script type="text/javascript">
-        // set the pyodide files URL (packages.json, pyodide.asm.data etc)
-        window.languagePluginUrl = 'https://cdn.jsdelivr.net/pyodide/v0.15.0/full/';
+    window.languagePluginUrl = 'https://cdn.jsdelivr.net/pyodide/v0.15.0/full/';
     </script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.15.0/full/pyodide.js"></script>
-    
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+
     <script type="text/python" src="app.py"></script>
 
     <script type="text/javascript">
@@ -37,13 +38,9 @@
       text = await response.text()
       pyodide.runPython(text)
     }
-    function run_all() {
+    languagePluginLoader.then(() => {
       document.querySelectorAll('script[type="text/python"]').forEach(run_script)
-    }
-    function init() {
-      languagePluginLoader.then(run_all);
-    }
-    init()
+    });
     </script>
   </body>
 </html>

@@ -1,6 +1,6 @@
 ### lys (templating engine) ###
-from js import document
-import html, types, keyword, sys, re
+from js import React, ReactDOM
+import html, types, keyword
 
 
 VOID_TAGS = [
@@ -17,31 +17,19 @@ class LysException(Exception):
 def lys_render(node):
     """Render a node or a node list to an HTML node"""
     if node is None:
-        return document.createTextNode('')
+        return None
     elif type(node) is LysRawNode:
-        span = document.createElement('span')
-        span.innerHTML = node.content
-        return span
+        return React.createElement('span', {
+            'dangerouslySetInnerHTML': {
+                '__html': node.content
+            }
+        })
     elif type(node) in (tuple, list, types.GeneratorType):
-        span = document.createElement('span')
-        for child in node:
-            span.appendChild(lys_render(child))
-        return span
+        return React.createElement('span', None, [lys_render(child) for child in node])
     elif type(node) is str:
-        span = document.createElement('span')
-        span.innerHTML = html.escape(node)
-        return span
+        return React.createElement('span', None, node)
     else:
-        node_rendered = document.createElement(node.tag)
-        if node.attrs:
-            for k, v in node.attrs.items():
-                if k.startswith('on') and callable(v):
-                    node_rendered.addEventListener(k[2:].lower(), v)
-                else:
-                    node_rendered.setAttribute(k, v)
-        if node.children:
-            node_rendered.appendChild(lys_render(node.children))
-        return node_rendered
+        return React.createElement(node.tag, node.attrs, lys_render(node.children))
 
 
 class LysNode:
@@ -80,7 +68,7 @@ class LysNode:
             current_classes = attrs.get('class', '').split(' ')
             new_classes = [raise_if_bad_name(klass) for klass in current_classes + classes if klass]
             if new_classes:
-                attrs['class'] = ' '.join(new_classes)
+                attrs['className'] = ' '.join(new_classes)
 
         return LysNode(self.tag, attrs)
 
@@ -125,6 +113,8 @@ L = _L()
 
 
 ### app ###
+from js import document
+
 
 STATE = {
     'todos': [],
@@ -142,27 +132,29 @@ def generate_id():
 def new_todo(evt):
     if evt.key != "Enter":
         return
+    if not evt.target.value:
+        return
     STATE['todos'] = [{
         'id': generate_id(),
         'title': evt.target.value,
         'completed': False,
     }] + STATE['todos']
+    evt.target.value = ''
     render()
 
 
 def render():
     remaining = len([todo for todo in STATE['todos'] if not todo['completed']])
-    completed = len([todo for todo in STATE['todos'] ifss todo['completed']])
+    completed = len([todo for todo in STATE['todos'] if todo['completed']])
 
-    document.getElementById('app').innerHTML = ''
-    document.getElementById('app').appendChild(lys_render((
+    rendered = lys_render((
         L.header('.header') / (
             L.h1 / 'todos',
-            L.input('.new-todo', placeholder="What needs to be done?", autofocus='', onkeyup=new_todo),
+            L.input('.new-todo', placeholder="What needs to be done?", autoFocus='', onKeyUp=new_todo),
         ),
         L.section('.main') / (
             L.input('.toggle-all', type="checkbox"),
-            L.label(**{'for':"toggle-all"}) / 'Mark all as complete',
+            L.label(htmlFor="toggle-all") / 'Mark all as complete',
         ),
         L.ul('.todo-list') / (
             (
@@ -185,6 +177,11 @@ def render():
             ),
             (L.button('.clear-completed') / 'Clear completed') if completed else None,
         ),
-    )))
+    ))
+
+    ReactDOM.render(
+      rendered,
+      document.getElementById('app')
+    );
 
 render()
