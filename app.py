@@ -135,6 +135,7 @@ def new_todo(evt):
     STATE['todos'] = [{
         'title': evt.target.value,
         'completed': False,
+        'editing': False,
     }] + STATE['todos']
     evt.target.value = ''
     render()
@@ -156,12 +157,37 @@ def destroy(removed_todo):
     render()
 
 
+def enter_editing_mode(todo):
+    todo['editing'] = True
+    render()
+
+
+def exit_editing_mode(evt, todo):
+    if evt.key != "Enter":
+        return
+    if not todo['title']:
+        destroy(todo)
+        return
+    todo['editing'] = False
+    render()
+
+
+def update_title(evt, todo):
+    todo['title'] = evt.target.value
+    render()
+
+
 def render_todo(todo):
-    return L.li / (
-        L.input('.toggle', type="checkbox", checked=todo['completed'],
-            onChange=lambda evt: toggle(todo)),
-        L.label / todo['title'],
-        L.button('.destroy', onClick=lambda evt: destroy(todo)),
+    return L.li('.editing' if todo['editing'] else '') / (
+        L.div('.view') / (
+            L.input('.toggle', type="checkbox", checked=todo['completed'],
+                onChange=lambda evt: toggle(todo)),
+            L.label(onClick=lambda evt: enter_editing_mode(todo)) / todo['title'], # TODO: double click
+            L.button('.destroy', onClick=lambda evt: destroy(todo)),
+        ),
+        L.input('.edit', value=todo['title'],
+            onChange=lambda evt: update_title(evt, todo),
+            onKeyUp=lambda evt: exit_editing_mode(evt, todo))
     )
 
 
