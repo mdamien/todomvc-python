@@ -130,6 +130,10 @@ def _remaining():
     return len([todo for todo in STATE['todos'] if not todo['completed']])
 
 
+def _get_todo_by_id(id):
+    return [todo for todo in STATE['todos'] if todo['id'] == id][0]
+
+
 def new_todo(evt):
     if evt.key != "Enter":
         return
@@ -150,10 +154,30 @@ def toggle_all(evt):
     render()
 
 
+def toggle(todo):
+    todo['completed'] = not todo['completed']
+    render()
+
+
+def render_todo(todo):
+    def on_change(evt):
+        toggle(todo)
+
+    return L.li / (
+        L.input('.toggle', type="checkbox", checked=todo['completed'], onChange=on_change),
+        L.label / todo['title'],
+        L.button('.destroy'),
+    )
+
+
 def render():
     total = len(STATE['todos'])
     remaining = _remaining()
     completed = total - remaining
+
+    todos = []
+    for todo in STATE['todos']:
+        todos.append(render_todo(todo))
 
     rendered = lys_render((
         L.header('.header') / (
@@ -165,15 +189,7 @@ def render():
                 checked=remaining == 0 and total > 0),
             L.label(htmlFor="toggle-all") / 'Mark all as complete',
         ),
-        L.ul('.todo-list') / (
-            (
-                L.li / (
-                    L.input('.toggle', type="checkbox", checked=todo['completed']),
-                    L.label / todo['title'],
-                    L.button('.destroy'),
-                )
-            ) for todo in STATE['todos']
-        ),
+        L.ul('.todo-list') / todos,
         L.footer('.footer') / (
             L.span('.todo-count') / (
                 L.strong / f"{remaining} ",
