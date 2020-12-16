@@ -119,13 +119,6 @@ STATE = {
 }
 
 
-ID_COUNTER = 0
-def _generate_id():
-    global ID_COUNTER
-    ID_COUNTER += 1
-    return ID_COUNTER
-
-
 def _remaining():
     return len([todo for todo in STATE['todos'] if not todo['completed']])
 
@@ -140,7 +133,6 @@ def new_todo(evt):
     if not evt.target.value:
         return
     STATE['todos'] = [{
-        'id': _generate_id(),
         'title': evt.target.value,
         'completed': False,
     }] + STATE['todos']
@@ -159,14 +151,17 @@ def toggle(todo):
     render()
 
 
-def render_todo(todo):
-    def on_change(evt):
-        toggle(todo)
+def destroy(removed_todo):
+    STATE['todos'] = [todo for todo in STATE['todos'] if todo is not removed_todo]
+    render()
 
+
+def render_todo(todo):
     return L.li / (
-        L.input('.toggle', type="checkbox", checked=todo['completed'], onChange=on_change),
+        L.input('.toggle', type="checkbox", checked=todo['completed'],
+            onChange=lambda evt: toggle(todo)),
         L.label / todo['title'],
-        L.button('.destroy'),
+        L.button('.destroy', onClick=lambda evt: destroy(todo)),
     )
 
 
