@@ -111,13 +111,13 @@ L = _L()
 
 ### app ###
 import js
-from js import document, localStorage
+from js import document, localStorage, location, jQuery, WINDOW
+
 import json
 
 
 STATE = {
     'todos': [],
-    'filter': 'all',
 }
 
 
@@ -198,10 +198,6 @@ def render_todo(todo):
     )
 
 
-def set_filter(filter):
-    STATE['filter'] = filter
-    save_and_render()
-
 def save_and_render():
     localStorage.setItem('app', json.dumps(STATE))
     render()
@@ -212,9 +208,14 @@ def render():
     remaining = _remaining()
     completed = total - remaining
 
-    if STATE['filter'] == 'active':
+    filter = location.hash.replace('#', '')
+    if not filter:
+        filter = 'all'
+    print(filter)
+
+    if filter == 'active':
         todos_to_render = [todo for todo in STATE['todos'] if not todo['completed']]
-    elif STATE['filter'] == 'completed':
+    elif filter == 'completed':
         todos_to_render = [todo for todo in STATE['todos'] if todo['completed']]
     else:
         todos_to_render = STATE['todos']
@@ -240,12 +241,9 @@ def render():
                 f"{'item' if remaining == 1 else 'items'} left",
             ),
             L.ul('.filters') / (
-                L.li / L.a('.selected' if STATE['filter'] == 'all' else '',
-                    onClick=lambda evt: set_filter('all'), href="#") / 'All',
-                L.li / L.a('.selected' if STATE['filter'] == 'active' else '',
-                    onClick=lambda evt: set_filter('active'), href="#") / 'Active',
-                L.li / L.a('.selected' if STATE['filter'] == 'completed' else '',
-                    onClick=lambda evt: set_filter('completed'), href="#") / 'Completed',
+                L.li / L.a('.selected' if filter == 'all' else '', href="#") / 'All',
+                L.li / L.a('.selected' if filter == 'active' else '', href="#active") / 'Active',
+                L.li / L.a('.selected' if filter == 'completed' else '', href="#completed") / 'Completed',
             ),
             (L.button('.clear-completed', onClick=clear_completed) / 'Clear completed') if completed else None,
         ),
@@ -256,7 +254,10 @@ def render():
       document.getElementById('app')
     );
 
+
 if localStorage.getItem('app'):
     STATE = json.loads(localStorage.getItem('app'))
 
 render()
+
+jQuery(WINDOW).on('hashchange', lambda *args: render())

@@ -18,12 +18,15 @@
     window.languagePluginUrl = 'https://cdn.jsdelivr.net/pyodide/v0.15.0/full/';
     </script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.15.0/full/pyodide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
 
     <script type="text/python" src="app.py"></script>
 
     <script type="text/javascript">
+    jQuery = $
+    WINDOW = window
     async function run_script(el) {
       console.log("executing " + el.src)
       const response = await fetch(el.src);
