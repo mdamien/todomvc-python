@@ -111,7 +111,7 @@ L = _L()
 
 ### app ###
 import js
-from js import document, localStorage, location, jQuery, WINDOW
+from js import document, localStorage, location, window
 
 import json
 
@@ -211,7 +211,6 @@ def render():
     filter = location.hash.replace('#', '')
     if not filter:
         filter = 'all'
-    print(filter)
 
     if filter == 'active':
         todos_to_render = [todo for todo in STATE['todos'] if not todo['completed']]
@@ -259,5 +258,4 @@ if localStorage.getItem('app'):
     STATE = json.loads(localStorage.getItem('app'))
 
 render()
-
-jQuery(WINDOW).on('hashchange', lambda *args: render())
+window.addEventListener('hashchange', lambda *args: render())
